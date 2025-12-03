@@ -20,7 +20,7 @@ services:
     build: .
     command: npm run dev
     environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/autopilot
+      DATABASE_URL: postgresql://postgres:oMuZmcPyOPXdhbolSzYbvWorfHnyrKvm@hopper.proxy.rlwy.net:43292/railway?sslmode=require
       REDIS_URL: redis://redis:6379
       OPENAI_KEY: ""
       WHATSAPP_TOKEN: ""
