@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  name       String?
+  password   String? // optional if using magic link
+  role       Role     @default(USER)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  client     Client?
+}
+
+model Client {
+  id                String    @id @default(cuid())
+  name              String
+  contact_email     String
+  contact_phone     String?
+  apiKey            String    @unique
+  plan              String
+  webhookSecret     String
+  whatsappPhoneId   String?   // the phone-number-id used in WhatsApp Cloud API
+  stripeCustomerId  String? 
+  automations       Automation[]
+  invoices          Invoice[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model Automation {
+  id           String   @id @default(cuid())
+  clientId     String
+  name         String
+  type         String   // e.g. LEAD_FOLLOWUP, APPT_REMINDER
+  config       Json
+  status       String   @default("inactive")
+  lastRunAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id])
+  runs   AutomationRun[]
+}
+
+model AutomationRun {
+  id           String   @id @default(cuid())
+  automationId String
+  status       String   // queued, running, done, failed
+  attempts     Int      @default(0)
+  logs         Json?
+  scheduledFor DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  automation Automation @relation(fields: [automationId], references: [id])
+}
+
+model Lead {
+  id         String   @id @default(cuid())
+  clientId   String
+  name       String?
+  phone      String?
+  source     String?
+  payload    Json
+  createdAt  DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id])
+}
+
+model Invoice {
+  id         String   @id @default(cuid())
+  clientId   String
+  amount     Int
+  currency   String  @default("INR")
+  status     String  @default("pending")
+  dueDate    DateTime?
+  metadata   Json?
+  stripeInvoiceId String?
+  createdAt  DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
